@@ -13,6 +13,7 @@ from typing import Dict, List, Optional, Tuple
 import pygame
 
 import config as C
+from version import VERSION
 from gameplay.challenges import CHALLENGES
 from graphics import animals as art
 from ui.graph import draw_graph
@@ -334,6 +335,7 @@ class Interface:
         world = game.world
 
         self.text(surf, "Tiny Ecosystem", 26, C.INK, (x0, 12), bold=True)
+        self.text(surf, "v" + VERSION, 12, C.INK_SOFT, (x0 + w, 26), anchor="topright")
         self.text(surf, "Day %d   ·   world #%d" % (world.day, world.seed), 14, C.INK_SOFT, (x0, 48))
 
         # live counters

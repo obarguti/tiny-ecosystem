@@ -14,6 +14,7 @@ from typing import List, Optional
 import pygame
 
 import config as C
+from version import VERSION
 from gameplay.challenges import CHALLENGES, Challenge, ChallengeRun
 from gameplay.explain import explain
 from graphics.renderer import Renderer
@@ -349,7 +350,7 @@ def main(argv=None) -> int:
     if args.screenshot:
         os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     pygame.init()
-    pygame.display.set_caption("Tiny Ecosystem")
+    pygame.display.set_caption("Tiny Ecosystem v" + VERSION)
     flags = pygame.SCALED | pygame.RESIZABLE if not args.screenshot else 0
     screen = pygame.display.set_mode((C.WINDOW_W, C.WINDOW_H), flags)
     clock = pygame.time.Clock()

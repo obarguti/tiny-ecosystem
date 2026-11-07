@@ -19,6 +19,7 @@ from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
 from config import SimConfig
+from version import VERSION
 from simulation import rules
 from simulation.world import Params, World
 
@@ -39,6 +40,7 @@ def build_csv(world: World, challenge=None, now: Optional[datetime] = None) -> s
     out.write("# Reproduce and check:  python tests/replay.py <this file>\n")
     out.write("#\n# --- run ---\n")
     put("format_version", FORMAT_VERSION)
+    put("app_version", VERSION)
     put("exported", now.strftime("%Y-%m-%d %H:%M:%S"))
     put("seed", world.seed)
     put("mode", ("challenge %d: %s" % (challenge.id, challenge.title)) if challenge else "sandbox")
