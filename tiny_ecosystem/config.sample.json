@@ -1,0 +1,45 @@
+{
+  "_help": [
+    "HOW TO USE: copy this file to 'config.json' (same folder), edit the numbers, then restart the game.",
+    "Delete a line (or the whole file) to go back to the default for that value.",
+    "Keys starting with an underscore, like this one, are ignored. JSON has no comments, so notes live here.",
+    "Values shown are the current defaults. Whole numbers stay whole (start_rabbits), others may have decimals.",
+    "Keep the file valid JSON: commas between lines, none after the last line. If it is broken the game silently uses defaults.",
+    "Challenges use their own starting animals; start_rabbits / start_foxes only affect the sandbox.",
+    "Test a change without playing:  python tests/balance.py 20 1000 start_foxes=3"
+  ],
+
+  "_world": "Starting animals and speed. Do not change cols/rows: the window layout is fixed to 30 x 20.",
+  "start_rabbits": 35,
+  "start_foxes": 7,
+  "ticks_per_second": 2.0,
+
+  "_grass": "Grass runs 0-100 per cell.",
+  "grass_regrow": 2.0,
+  "rabbit_eat_max": 20.0,
+
+  "_rabbits": "Energy 0-100. Rabbits die at 0 energy or max age.",
+  "rabbit_start_energy": 60.0,
+  "rabbit_max_energy": 100.0,
+  "rabbit_energy_loss": 3.0,
+  "rabbit_energy_per_grass": 0.3,
+  "rabbit_repro_threshold": 65.0,
+  "rabbit_repro_prob": 0.15,
+  "rabbit_repro_cost": 30.0,
+  "rabbit_child_energy": 40.0,
+  "rabbit_max_age": 100,
+
+  "_foxes": "fox_hungry_below: a fox only hunts when its energy is under this. fox_detect_radius: how many cells it can see.",
+  "fox_start_energy": 65.0,
+  "fox_max_energy": 120.0,
+  "fox_energy_loss": 4.0,
+  "fox_meal_energy": 50.0,
+  "fox_detect_radius": 2.0,
+  "fox_hungry_below": 60.0,
+  "fox_hunt_steps": 1,
+  "fox_repro_threshold": 100.0,
+  "fox_repro_prob": 0.07,
+  "fox_repro_cost": 40.0,
+  "fox_child_energy": 45.0,
+  "fox_max_age": 200
+}
