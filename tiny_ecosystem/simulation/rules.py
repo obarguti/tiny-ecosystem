@@ -118,29 +118,54 @@ def vision(w: World) -> float:
 
 
 def _move_rabbit(w: World, r: Rabbit, locked: set) -> None:
-    flee2 = w.cfg.rabbit_flee_radius ** 2
+    cfg = w.cfg
+    flee2 = cfg.rabbit_flee_radius ** 2
     threats = [f for f in w.foxes if f.chasing == r.id or _d2(f, r) <= flee2]
-    best: Optional[Tuple[float, int, int]] = None
-    for dx, dy in [(0, 0)] + NEIGHBOURS:
-        nx, ny = r.x + dx, r.y + dy
-        if not w.in_bounds(nx, ny):
-            continue
-        if (dx, dy) != (0, 0) and (nx, ny) in w.occ:
-            continue
-        if threats:
-            # run: maximise distance from the nearest threatening fox
+    if threats:
+        best: Optional[Tuple[float, int, int]] = None
+        for dx, dy in [(0, 0)] + NEIGHBOURS:
+            nx, ny = r.x + dx, r.y + dy
+            if not w.in_bounds(nx, ny) or ((dx, dy) != (0, 0) and (nx, ny) in w.occ):
+                continue
             dist = min((nx - f.x) ** 2 + (ny - f.y) ** 2 for f in threats)
             score = dist * 10 + w.rng.uniform(0, 4) + w.grass[ny][nx] * 0.02
-        else:
-            # prefer greener cells, but add noise so movement stays lively
-            score = w.grass[ny][nx] + w.rng.uniform(0, 55) - (12 if (dx, dy) == (0, 0) else 0)
-        if best is None or score > best[0]:
-            best = (score, nx, ny)
-    if best and (best[1], best[2]) != (r.x, r.y):
-        w.move(r, best[1], best[2])
-        r.status = "Searching for food"
-    if threats:
+            if best is None or score > best[0]:
+                best = (score, nx, ny)
+        if best and (best[1], best[2]) != (r.x, r.y):
+            w.move(r, best[1], best[2])
         r.status = "Fleeing"
+        return
+
+    hungry = r.energy < cfg.rabbit_hungry_below
+    if hungry and w.grass[r.y][r.x] >= cfg.rabbit_stay_grass:
+        return                                   # good food right here: stay and eat
+    if hungry:
+        # head for the best patch in sight (lots of grass, not too far away)
+        sight = int(cfg.rabbit_sight)
+        target = None
+        best_score = w.grass[r.y][r.x]
+        for ty in range(max(0, r.y - sight), min(w.rows, r.y + sight + 1)):
+            for tx in range(max(0, r.x - sight), min(w.cols, r.x + sight + 1)):
+                d2 = (tx - r.x) ** 2 + (ty - r.y) ** 2
+                if d2 == 0 or d2 > cfg.rabbit_sight ** 2 or (tx, ty) in w.occ:
+                    continue
+                score = w.grass[ty][tx] - 6.0 * d2 ** 0.5
+                if score > best_score:
+                    target, best_score = (tx, ty), score
+        if target is not None:
+            sx = (target[0] > r.x) - (target[0] < r.x)
+            sy = (target[1] > r.y) - (target[1] < r.y)
+            for tx, ty in ((r.x + sx, r.y + sy), (r.x + sx, r.y), (r.x, r.y + sy)):
+                if (tx, ty) != (r.x, r.y) and w.in_bounds(tx, ty) and (tx, ty) not in w.occ:
+                    w.move(r, tx, ty)
+                    r.status = "Searching for food"
+                    return
+    # fed (or nothing in sight): amble about, mildly preferring greener cells
+    options = [(r.x + dx, r.y + dy) for dx, dy in NEIGHBOURS if w.is_free(r.x + dx, r.y + dy)]
+    if options and w.rng.random() < 0.7:
+        nx, ny = max(options, key=lambda c: w.grass[c[1]][c[0]] + w.rng.uniform(0, 40))
+        w.move(r, nx, ny)
+        r.status = "Searching for food" if hungry else "Wandering"
 
 
 def _find_rabbit(w: World, rabbit_id: int) -> Optional[Rabbit]:

@@ -25,7 +25,7 @@ class SimConfig:
 
     # --- grass ---
     grass_max: float = 100.0
-    grass_regrow: float = 2.0       # per tick
+    grass_regrow: float = 1.5       # per tick (a bare cell takes ~65 days to recover)
     rabbit_eat_max: float = 20.0    # per feeding
 
     # --- rabbits ---
@@ -42,19 +42,22 @@ class SimConfig:
     rabbit_repro_cooldown: int = 8     # ticks before either partner can breed again
     rabbit_mate_radius: float = 3.0    # a willing partner must be this close
     rabbit_flee_radius: float = 2.5    # a fox this close makes a rabbit run
+    rabbit_sight: float = 4.0          # a hungry rabbit looks this far for grass
+    rabbit_hungry_below: float = 80.0  # below this energy a rabbit actively seeks food
+    rabbit_stay_grass: float = 30.0    # a hungry rabbit stays put if its cell has at least this much grass
 
     # --- foxes ---
     # NOTE: values below were tuned with tests/balance.py (see README, "Balancing").
     fox_start_energy: float = 65.0
     fox_max_energy: float = 120.0
     fox_energy_loss: float = 4.0
-    fox_meal_energy: float = 50.0
+    fox_meal_energy: float = 60.0
     fox_detect_radius: float = 4.0   # vision at slider 1.0 (the Fox Hunger slider scales it)
     fox_repro_threshold: float = 100.0
     fox_repro_prob: float = 0.07
     fox_repro_cost: float = 40.0
     fox_child_energy: float = 45.0
-    fox_max_age: int = 200
+    fox_max_age: int = 400
     fox_repro_min_age: int = 20
     fox_repro_cooldown: int = 25
     fox_mate_radius: float = 5.0

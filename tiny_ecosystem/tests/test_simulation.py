@@ -21,7 +21,7 @@ def test_grass_growth_is_capped():
     w.grass[0][0] = 10.0
     rules.step(w)
     assert all(0 <= v <= 100 for row in w.grass for v in row)
-    assert w.grass[0][0] == 12.0           # +2 per tick
+    assert w.grass[0][0] == 10.0 + w.cfg.grass_regrow
     assert w.grass[1][1] == 100.0          # stops at 100
 
 
@@ -30,7 +30,7 @@ def test_grass_regrowth_slider_applies_live():
     w.grass[0][0] = 0.0
     w.params.grass_growth = 2.0
     rules.step(w)
-    assert w.grass[0][0] == 4.0
+    assert w.grass[0][0] == 2 * w.cfg.grass_regrow
 
 
 def test_rabbit_energy_cost_and_eating():
