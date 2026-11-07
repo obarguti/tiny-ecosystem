@@ -69,13 +69,18 @@ python tests/smoke_ui.py        # drives the real UI headlessly (clicks, sliders
 
 ## Balancing notes
 
-All values live in `defaults.json` (load order: built-in, `defaults.json`, `config.json`). They were
-tuned with `tests/balance.py`; with the plan's original numbers one species always dominated.
-Over 20 seeds x 1000 days the rabbits die out in 13 runs and the foxes in all 20 (7 of those after the
-rabbits), but both species are alive together about 70% of the time before that, and rabbit peaks are
-around 150 (down from about 290 before foxes could chase). Typical life of a world: a rabbit boom, foxes
-catch up and thin them, then one side collapses somewhere between day 200 and 1000. Extinction is not prevented. A stable,
-permanent balance was not achieved; the Setup screen and sliders are there to explore it.
+All values live in `defaults.json` (load order: built-in, `defaults.json`, `config.json`); test changes
+with `python tests/balance.py 20 1000 key=value`.
+
+* **Rabbits forage.** A rabbit below 80 energy heads for the best grass within 4 cells (and stays put on a
+  cell with 30+ grass); a well-fed rabbit just ambles about. Grass regrows 1.5 per tick, so grazed
+  patches really do go bare.
+* Over 20 seeds x 1000 days: grass averages about 50%, rabbit peaks are around 160, rabbits die out in
+  about 13 runs and the foxes in every run (usually by day 250-600).
+* **A stable, permanent three-way balance was NOT achieved.** Several bounded searches (fox energy and
+  breeding, rabbit mating range, grass regrowth and nutrition, bush hiding spots) hit the same wall: in
+  this small, well-mixed world the foxes overshoot, eat the last rabbits and then starve. A real fix
+  needs a new mechanism (e.g. fox territories or a population cap), not another number.
 
 ## Known issues / not done
 
