@@ -49,6 +49,8 @@ SLIDER_TIPS = {
 }
 
 MODAL_TIPS = {
+    "end_restart": "Replay this same world from day 1 (paused).",
+    "end_new": "Make a different random meadow, paused on day 1.",
     "start": "Close this window and begin. The Setup window starts the clock for you; use Step if you "
              "would rather go one day at a time.",
     "menu": "Open the three science challenges. Each one gives you a goal to reach by changing the rules.",
@@ -552,6 +554,8 @@ class Interface:
             self._modal_outcome(layer, game, mouse)
         elif game.modal == "setup":
             self._modal_setup(layer, game, mouse)
+        elif game.modal == "end":
+            self._modal_end(layer, game, mouse)
         layer.set_alpha(int(255 * ease))
         surf.blit(layer, (0, int((1 - ease) * 24)))
 
@@ -641,6 +645,27 @@ class Interface:
         self._modal_button(surf, "retry", pygame.Rect(rect.centerx - 270, rect.bottom - 70, 170, 46), "Try again", mouse, True)
         self._modal_button(surf, "menu", pygame.Rect(rect.centerx - 85, rect.bottom - 70, 170, 46), "Challenges", mouse)
         self._modal_button(surf, "freeplay", pygame.Rect(rect.centerx + 100, rect.bottom - 70, 170, 46), "Keep playing", mouse)
+
+    def _modal_end(self, surf, game, mouse) -> None:
+        rect = self._modal_frame(surf, 600, 340, "The meadow is empty")
+        w = game.world
+        msg = ("On day %d every rabbit and fox was gone, and the grass grew back to 100%% with nothing to eat it. "
+               "The simulation has ended." % w.day)
+        f = self.fonts.get(17)
+        y = rect.y + 86
+        for ln in wrap(msg, f, rect.w - 80):
+            img = f.render(ln, True, C.INK)
+            surf.blit(img, img.get_rect(midtop=(rect.centerx, y)))
+            y += 26
+        f = self.fonts.get(14)
+        y += 8
+        for ln in wrap("Try again with more grass-eaters, fewer foxes, or a slower Fox Hunger.", f, rect.w - 80):
+            img = f.render(ln, True, C.INK_SOFT)
+            surf.blit(img, img.get_rect(midtop=(rect.centerx, y)))
+            y += 20
+        self._modal_button(surf, "end_restart", pygame.Rect(rect.centerx - 270, rect.bottom - 70, 170, 46), "Restart", mouse, True)
+        self._modal_button(surf, "end_new", pygame.Rect(rect.centerx - 85, rect.bottom - 70, 170, 46), "New world", mouse)
+        self._modal_button(surf, "close", pygame.Rect(rect.centerx + 100, rect.bottom - 70, 170, 46), "Close", mouse)
 
     def _modal_setup(self, surf, game, mouse) -> None:
         rect = self._modal_frame(surf, 640, 520, "Set up your meadow")

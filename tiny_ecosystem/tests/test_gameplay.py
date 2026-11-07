@@ -54,3 +54,30 @@ def test_explain_returns_short_messages():
         rules.step(w)
     msgs = explain(w)
     assert 1 <= len(msgs) <= 3 and all(isinstance(m, str) and m for m in msgs)
+
+
+def test_sandbox_ends_when_no_animals_and_grass_full():
+    import os
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    import config as C
+    from main import Game
+    pygame.init()
+    g = Game(pygame.display.set_mode((C.WINDOW_W, C.WINDOW_H)), C.load_config())
+    w = g.world
+    for a in list(w.rabbits) + list(w.foxes):
+        w.remove(a, "removed")
+    for _ in range(80):                      # grass is regrowing, animals are gone
+        g.step_once()
+        if g.ended:
+            break
+    assert g.ended and g.modal == "end" and not g.playing and w.grass_pct() >= 99.999
+    day = w.day
+    g.step_once()
+    assert w.day == day                      # no more simulating once ended
+    g.new_world()
+    assert not g.ended
+    # a world that still has animals never ends
+    for _ in range(80):
+        g.step_once()
+    assert not g.ended

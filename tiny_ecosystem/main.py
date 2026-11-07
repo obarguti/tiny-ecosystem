@@ -34,6 +34,7 @@ class Game:
         self.tool = "inspect"
         self.selected: Optional[int] = None
         self.show_why = False
+        self.ended = False                  # sandbox run finished (nothing left to simulate)
         self.why: List[str] = []
         self.modal: Optional[str] = None
         self.modal_t = 0.0
@@ -61,6 +62,7 @@ class Game:
                                params=self.params, grass_level=self.spec["grass"])
         self.renderer.set_world(self.world)
         self.selected = None
+        self.ended = False
         self.acc = 0.0
         self.refresh_why()
 
@@ -82,8 +84,15 @@ class Game:
 
     # ------------------------------------------------------------ simulation
     def step_once(self) -> None:
+        if self.ended:
+            return
         rules.step(self.world)
         self.renderer.note_tick(self.world)
+        w = self.world
+        if self.run is None and not w.rabbits and not w.foxes and w.grass_pct() >= 99.999:
+            self.ended = True                   # no rabbits, no foxes, and the grass grew unchecked
+            self.playing = False
+            self.open_modal("end")
         if self.run is not None and self.run.status == "running":
             self.run.update(self.world)
             if self.run.status != "running":
@@ -120,7 +129,9 @@ class Game:
             self.selected = None
 
     def do_button(self, bid: str) -> None:
-        if bid == "play":
+        if bid in ("play", "step") and self.ended:
+            self.open_modal("end")
+        elif bid == "play":
             self.playing = not self.playing
         elif bid == "step":
             self.playing = False
@@ -169,6 +180,13 @@ class Game:
             self.open_modal("menu")
         elif bid == "close":
             self.modal = None
+        elif bid == "end_new":
+            self.modal = None
+            self.new_world(challenge=None)
+            self.playing = False
+        elif bid == "end_restart":
+            self.modal = None
+            self.restart()
         elif bid == "freeplay":
             self.modal = None
             if self.run is not None and self.run.status != "running":

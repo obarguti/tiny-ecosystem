@@ -32,6 +32,9 @@ python main.py --screenshot shot.png --days 60 --seed 3 --select 5   # headless 
 The graph shows the last 300 days: rabbits (blue, left scale), foxes (orange, right scale) and grass
 (green, % of meadow). F12 saves a screenshot. Right-click returns to Inspect.
 
+**The sandbox ends** when there are no rabbits, no foxes and the grass has grown back to 100%.
+Challenges have their own win/lose rules.
+
 ## Layout
 
 ```
