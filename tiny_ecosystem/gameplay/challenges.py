@@ -27,7 +27,7 @@ CHALLENGES: List[Challenge] = [
     Challenge(1, "Balance the Meadow",
               "Lots of foxes already live here. Adjust the sliders before you press Play.",
               "Keep at least 10 rabbits and 2 foxes alive for 200 days.",
-              seed=1, rabbits=25, foxes=14, grass_scale=1.0, days=200, min_rabbits=10, min_foxes=2,
+              seed=1, rabbits=30, foxes=10, grass_scale=1.0, days=200, min_rabbits=10, min_foxes=2,
               hint="Too many foxes empties the meadow of rabbits. Too few babies lets populations crash."),
     Challenge(2, "The Drought",
               "Grass grows back at half the normal speed.",
@@ -37,7 +37,7 @@ CHALLENGES: List[Challenge] = [
     Challenge(3, "Too Many Foxes",
               "A large group of foxes has moved in!",
               "Stop the rabbits from dying out for 150 days.",
-              seed=1, rabbits=15, foxes=35, grass_scale=1.0, days=150, min_rabbits=1, min_foxes=0,
+              seed=1, rabbits=20, foxes=30, grass_scale=1.0, days=150, min_rabbits=1, min_foxes=0,
               hint="Try adding rabbits, helping the grass grow, or making foxes less hungry."),
 ]
 

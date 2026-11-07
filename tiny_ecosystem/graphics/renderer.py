@@ -378,6 +378,10 @@ class Renderer:
                 sel = (fx, fy)
                 pygame.draw.ellipse(view, C.HIGHLIGHT, (fx - 20, fy - 6, 40, 14), 2)
             view.blit(spr, (fx - ax, fy - ay))
+            if a.status == "Fleeing":
+                ex, ey = fx + 2, fy - 50 - lift
+                pygame.draw.polygon(view, (230, 70, 50), [(ex - 2, ey - 9), (ex + 2, ey - 9), (ex + 1, ey - 2), (ex - 1, ey - 2)])
+                pygame.draw.rect(view, (230, 70, 50), (ex - 1, ey, 3, 3))
 
         for g in self.ghosts:
             age = (self.time - g.t0) / 0.8

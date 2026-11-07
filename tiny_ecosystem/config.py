@@ -11,6 +11,7 @@ from dataclasses import dataclass, fields
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH = os.path.join(HERE, "config.json")
+DEFAULTS_PATH = os.path.join(HERE, "defaults.json")
 
 
 @dataclass
@@ -33,10 +34,14 @@ class SimConfig:
     rabbit_energy_loss: float = 3.0
     rabbit_energy_per_grass: float = 0.3
     rabbit_repro_threshold: float = 65.0
-    rabbit_repro_prob: float = 0.15
+    rabbit_repro_prob: float = 0.3
     rabbit_repro_cost: float = 30.0
     rabbit_child_energy: float = 40.0
     rabbit_max_age: int = 100
+    rabbit_repro_min_age: int = 10     # too young to breed before this
+    rabbit_repro_cooldown: int = 8     # ticks before either partner can breed again
+    rabbit_mate_radius: float = 3.0    # a willing partner must be this close
+    rabbit_flee_radius: float = 2.5    # a fox this close makes a rabbit run
 
     # --- foxes ---
     # NOTE: values below were tuned with tests/balance.py (see README, "Balancing").
@@ -44,27 +49,35 @@ class SimConfig:
     fox_max_energy: float = 120.0
     fox_energy_loss: float = 4.0
     fox_meal_energy: float = 50.0
-    fox_detect_radius: float = 2.0
+    fox_detect_radius: float = 4.0   # vision at slider 1.0 (the Fox Hunger slider scales it)
     fox_repro_threshold: float = 100.0
     fox_repro_prob: float = 0.07
     fox_repro_cost: float = 40.0
     fox_child_energy: float = 45.0
     fox_max_age: int = 200
-    fox_hungry_below: float = 60.0  # a fox only hunts while its energy is below this
-    fox_hunt_steps: int = 1         # cells a fox may cover per tick while chasing
+    fox_repro_min_age: int = 20
+    fox_repro_cooldown: int = 25
+    fox_mate_radius: float = 5.0
+    fox_chase_max: int = 3          # a chase that lasts this many ticks without a catch is abandoned
+    fox_rest_ticks: int = 3         # rest after a failed chase
+    fox_chase_energy: float = 1.5   # extra energy a chasing fox burns per tick
+    fox_hungry_below: float = 90.0  # a fox only hunts while its energy is below this
+    fox_hunt_steps: int = 2         # cells a fox may cover per tick while chasing
 
 
 def load_config(path: str = CONFIG_PATH) -> SimConfig:
+    """Built-in values, then defaults.json, then config.json (each optional)."""
     cfg = SimConfig()
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    except (OSError, ValueError):
-        return cfg
-    names = {f.name: f for f in fields(SimConfig)}
-    for key, value in data.items():
-        if key in names:
-            setattr(cfg, key, type(getattr(cfg, key))(value))
+    names = {f.name for f in fields(SimConfig)}
+    for file in (DEFAULTS_PATH, path):
+        try:
+            with open(file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except (OSError, ValueError):
+            continue
+        for key, value in data.items():
+            if key in names:
+                setattr(cfg, key, type(getattr(cfg, key))(value))
     return cfg
 
 

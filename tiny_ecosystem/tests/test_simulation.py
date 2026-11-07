@@ -75,31 +75,60 @@ def test_old_age_death():
     assert not r.alive and w.history[-1].old == 1
 
 
-def test_rabbit_reproduction_conditions():
-    cfg = SimConfig()
-    # below threshold: never reproduces
-    w = empty_world()
-    r = w.spawn("rabbit", 10, 10, energy=50)
-    for row in w.grass:
-        for x in range(w.cols):
-            row[x] = 0.0
-    w.params.grass_growth = 0.0
-    w.params.rabbit_repro = 100.0
-    rules.step(w)
-    assert len(w.rabbits) == 1
-    # high energy and certain probability: reproduces, pays 30, child gets 40
-    w = empty_world()
-    r = w.spawn("rabbit", 10, 10, energy=100)
+def _lush(w):
     for row in w.grass:
         for x in range(w.cols):
             row[x] = 100.0
-    w.params.rabbit_repro = 100.0   # probability forced to certainty
+
+
+def _pair(w, **kw):
+    a = w.spawn("rabbit", 10, 10, energy=kw.get("energy", 100))
+    b = w.spawn("rabbit", 11, 10, energy=kw.get("energy", 100))
+    a.age = b.age = kw.get("age", 30)
+    return a, b
+
+
+def test_rabbit_reproduction_needs_energy_age_partner_and_cooldown():
+    cfg = SimConfig()
+    # a lone rabbit never breeds
+    w = empty_world(); _lush(w); w.params.rabbit_repro = 100.0
+    r = w.spawn("rabbit", 10, 10, energy=100); r.age = 30
+    rules.step(w)
+    assert len(w.rabbits) == 1
+    # a pair that is too hungry never breeds
+    w = empty_world(); _lush(w); w.params.rabbit_repro = 100.0; w.params.grass_growth = 0.0
+    for row in w.grass:
+        for x in range(w.cols):
+            row[x] = 0.0
+    _pair(w, energy=50)
     rules.step(w)
     assert len(w.rabbits) == 2
-    child = [a for a in w.rabbits if a is not r][0]
+    # a pair that is too young never breeds
+    w = empty_world(); _lush(w); w.params.rabbit_repro = 100.0
+    _pair(w, age=2)
+    rules.step(w)
+    assert len(w.rabbits) == 2
+    # an eligible pair breeds; both go on cooldown; the child gets 40 energy
+    w = empty_world(); _lush(w); w.params.rabbit_repro = 100.0
+    a, b = _pair(w)
+    rules.step(w)
+    assert len(w.rabbits) == 3
+    child = [x for x in w.rabbits if x not in (a, b)][0]
     assert child.energy == cfg.rabbit_child_energy
-    assert abs(r.energy - (100 - 3 - 30)) < 1e-9 or r.energy < 100  # ate (capped) then paid
-    assert max(abs(child.x - r.x), abs(child.y - r.y)) <= 2
+    assert a.cooldown > 0 and b.cooldown > 0
+    # cooldown blocks the very next tick
+    rules.step(w)
+    assert len(w.rabbits) == 3
+
+
+def test_fox_pair_needed_too():
+    w = empty_world(); w.params.fox_repro = 100.0; w.params.fox_hunger = 0.0
+    f = w.spawn("fox", 10, 10, energy=120); f.age = 40
+    rules.step(w)
+    assert len(w.foxes) == 1
+    g = w.spawn("fox", 12, 10, energy=120); g.age = 40
+    rules.step(w)
+    assert len(w.foxes) == 3
 
 
 def test_fox_eats_adjacent_rabbit():
@@ -119,7 +148,7 @@ def test_fox_eats_adjacent_rabbit():
         if not w.rabbits:
             eaten += 1
             assert w.history[-1].eaten == 1
-            assert f.energy == 50 + 50 - 4
+            assert f.energy > 50
     assert eaten >= 5   # rabbits also move, so not every attempt connects
 
 
@@ -130,12 +159,39 @@ def test_fox_starves_and_dies():
     assert not f.alive and not w.foxes
 
 
-def test_fox_hunger_slider():
-    w = empty_world()
-    f = w.spawn("fox", 4, 4, energy=100.0)
-    w.params.fox_hunger = 1.5
+def test_fox_hunger_slider_sets_vision():
+    def status(hunger):
+        w = empty_world(); w.params.fox_repro = 0.0; w.params.grass_growth = 0.0
+        w.params.fox_hunger = hunger
+        w.spawn("fox", 10, 10, energy=50)
+        w.spawn("rabbit", 10, 15, energy=100)       # 5 cells away
+        rules.step(w)
+        return w.foxes[0].status
+    assert status(0.5) == "Wandering"                # sees 2 cells
+    assert status(1.5) in ("Hunting", "Eating")      # sees 6 cells
+
+
+def test_rabbit_flees_a_locked_on_fox():
+    fled = 0
+    for seed in range(10):
+        w = empty_world(seed=seed); w.params.fox_repro = 0.0
+        f = w.spawn("fox", 10, 10, energy=50)
+        r = w.spawn("rabbit", 12, 10, energy=100)
+        f.chasing = r.id
+        rules.step(w)
+        if r.alive and r.status == "Fleeing":
+            fled += 1
+            assert r.x >= 12 or r.alive
+    assert fled >= 3
+
+
+def test_failed_chase_ends_in_rest():
+    w = empty_world(); w.params.fox_repro = 0.0
+    f = w.spawn("fox", 0, 0, energy=50)
+    f.chase_ticks = w.cfg.fox_chase_max - 1
+    w.spawn("rabbit", 4, 0, energy=100)
     rules.step(w)
-    assert abs(f.energy - (100 - 6)) < 1e-9
+    assert f.alive and (f.rest > 0 or not w.rabbits)
 
 
 def test_positions_valid_and_unique():

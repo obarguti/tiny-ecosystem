@@ -42,7 +42,7 @@ TOOLS = [
 
 STATUS_COLORS = {
     "Eating": (110, 180, 80), "Hunting": (222, 90, 60), "Searching for food": (230, 180, 60),
-    "Wandering": (150, 150, 160), "Reproducing": (236, 90, 120), "Starving": (176, 70, 50),
+    "Wandering": (150, 150, 160), "Fleeing": (240, 120, 60), "Resting": (130, 150, 190), "Reproducing": (236, 90, 120), "Starving": (176, 70, 50),
 }
 
 

@@ -15,6 +15,7 @@ class Animal:
     px: int = -1          # position at the start of the last tick (for smooth drawing)
     py: int = -1
     alive: bool = True
+    cooldown: int = 0     # ticks until this animal may breed again
 
     kind = "animal"
 
@@ -31,7 +32,9 @@ class Rabbit(Animal):
 @dataclass
 class Fox(Animal):
     kind = "fox"
-    chasing: int = -1     # id of the rabbit being chased (for the renderer)
+    chasing: int = -1     # id of the rabbit this fox is locked onto
+    chase_ticks: int = 0
+    rest: int = 0
 
 
 @dataclass

@@ -25,7 +25,7 @@ python main.py --screenshot shot.png --days 60 --seed 3 --select 5   # headless 
 | **Tools** (1-5) | Inspect, Add Rabbits, Add Foxes, Add Grass, Remove. Click or drag on the meadow |
 | **Inspect** | click an animal for age, energy and what it is doing |
 | **Why?** (H) | plain-language explanation of recent changes |
-| **Sliders** | Rabbit Babies, Fox Babies, Grass Growth, Fox Hunger. They apply instantly |
+| **Sliders** | Rabbit Babies, Fox Babies, Grass Growth, Fox Hunger (= how far foxes can see). They apply instantly |
 | **Setup** (S) | choose starting rabbits, foxes and grass; presets; live preview |
 | **Challenges** (C) | three little experiments with progress, success/failure and instant retry |
 
@@ -36,7 +36,7 @@ The graph shows the last 300 days: rabbits (blue, left scale), foxes (orange, ri
 
 ```
 main.py                 app loop, input, glue
-config.py               all numbers (override any SimConfig field in config.json)
+config.py               loads the numbers; defaults.json holds them, config.json overrides
 simulation/             world.py, animals.py, rules.py    <- no Pygame in here
 graphics/               renderer.py, animals.py, environment.py
 ui/                     interface.py, graph.py
@@ -56,20 +56,26 @@ python tests/balance.py 20 1000 # 20 seeds x 1000 days: extinction + population 
 python tests/smoke_ui.py        # drives the real UI headlessly (clicks, sliders, challenge flow)
 ```
 
-## Balancing notes (please read)
+## How the animals behave
 
-The plan's starting values were treated as hypotheses and tested with `tests/balance.py`. With them
-unchanged, foxes wiped out the rabbits (and then themselves) in most seeds. Changes made:
+* **Foxes hunt by sight.** A hungry fox (energy below 90) that sees a rabbit inside its vision radius
+  *locks on* and sprints after it (2 cells per tick). The **Fox Hunger** slider scales that vision radius
+  (2 to 6 cells). A chase that fails after 3 ticks ends in a short rest, so rabbits can get away.
+* **Rabbits flee.** A rabbit that a fox has locked onto, or that has a fox within 2-3 cells, runs to the
+  free cell farthest from the fox (a red "!" shows it) and does not eat while running.
+* **Breeding needs a pair.** Both animals must be adult (rabbits 10 days, foxes 20), well fed
+  (65 / 100 energy), close to each other (3 / 5 cells), and off cooldown (8 / 25 days). Then there is a
+  chance of a baby, and both partners start their cooldown. A lone animal never breeds.
 
-* Foxes only **hunt while hungry** (`fox_hungry_below = 60` energy) and see **2 cells** (plan: 4).
-* Fox meal 50 energy, fox reproduction needs 100 energy, fox max age 200.
-* Rabbits reproduce at 65 energy with 15% chance.
+## Balancing notes
 
-Result over 20 seeds x 1000 days: rabbits survive in 20/20, both species in 19/20 (foxes die out in
-1). Populations follow visible boom-and-bust cycles (about 100 days long): rabbits swing roughly
-40-280, foxes climb slowly, and grass collapses at each rabbit peak. Extinction is not prevented and
-is still possible, especially if you push the sliders hard. Peaks are crowded; that is the overgrazing
-lesson, but you can soften it with fewer rabbit babies.
+All values live in `defaults.json` (load order: built-in, `defaults.json`, `config.json`). They were
+tuned with `tests/balance.py`; with the plan's original numbers one species always dominated.
+Over 20 seeds x 1000 days the rabbits die out in 13 runs and the foxes in all 20 (7 of those after the
+rabbits), but both species are alive together about 70% of the time before that, and rabbit peaks are
+around 150 (down from about 290 before foxes could chase). Typical life of a world: a rabbit boom, foxes
+catch up and thin them, then one side collapses somewhere between day 200 and 1000. Extinction is not prevented. A stable,
+permanent balance was not achieved; the Setup screen and sliders are there to explore it.
 
 ## Known issues / not done
 

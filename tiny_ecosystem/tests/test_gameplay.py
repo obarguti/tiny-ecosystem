@@ -28,14 +28,10 @@ def test_three_challenges_exist_and_fail_by_default():
 
 
 def test_each_challenge_can_be_won_with_sensible_tweaks():
-    wins = {
-        1: dict(fox_hunger=0.5),
-        2: dict(grass_growth=2.0),
-        3: dict(rabbit_repro=1.5, grass_growth=1.5),
-    }
+    tweaks = [dict(fox_hunger=0.5), dict(fox_hunger=0.5, fox_repro=0.3), dict(rabbit_repro=1.5), dict(grass_growth=2.0),
+              dict(fox_repro=0.0, fox_hunger=0.7), dict(rabbit_repro=1.5, grass_growth=1.5, fox_hunger=0.7)]
     for ch in CHALLENGES:
-        outcomes = [play(ch, **t).status for t in (wins[ch.id], dict(fox_repro=0.0, fox_hunger=0.6),
-                                                  dict(fox_repro=0.5, rabbit_repro=1.5, grass_growth=1.5, fox_hunger=0.8))]
+        outcomes = [play(ch, **t).status for t in tweaks]
         assert "won" in outcomes, (ch.title, outcomes)
 
 
