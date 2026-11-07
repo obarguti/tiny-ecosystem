@@ -24,6 +24,7 @@ python main.py --screenshot shot.png --days 60 --seed 3 --select 5   # headless 
 | **Speed** slider (+ / -) | 0.1x to 8x in 11 steps |
 | **Tools** (1-5) | Inspect, Add Rabbits, Add Foxes, Add Grass, Remove. Click or drag on the meadow |
 | **Inspect** | click an animal for age, energy and what it is doing |
+| **Reset** (rules header) | puts the four rule sliders back to normal; double-click one slider to reset just it |
 | **Help** (H) | explains what has been happening (hunting, fleeing, grazing, pairs) and how the rules work |
 | **Sliders** | Rabbit Babies, Fox Babies, Grass Growth, Fox Hunger (= how far foxes can see). They apply instantly |
 | **Setup** (S) | choose starting rabbits, foxes and grass; presets; live preview |

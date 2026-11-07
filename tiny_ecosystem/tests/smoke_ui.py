@@ -46,6 +46,10 @@ click((int(px + 15), int(py + 8 - 11))); assert g.selected is not None; frames(3
 sl = g.ui.sliders["fox_hunger"]
 click((sl.rect.right - 2, sl.rect.centery)); assert g.params.fox_hunger > 1.4, g.params
 click((sl.rect.x + sl.rect.w // 2, sl.rect.centery))
+g.params.fox_repro = 1.7; g.params.grass_growth = 0.4; g.params.fox_hunger = 1.4
+click(btn("reset_rules")); assert (g.params.fox_repro, g.params.grass_growth, g.params.fox_hunger, g.params.rabbit_repro) == (1, 1, 1, 1), g.params
+click((sl.rect.right - 2, sl.rect.centery)); assert g.params.fox_hunger > 1.4
+click((sl.rect.right - 2, sl.rect.centery)); assert g.params.fox_hunger == 1.0   # double-click resets one slider
 sp = g.ui.sliders["speed"]; click((sp.rect.right - 1, sp.rect.centery)); assert g.speed == 8.0
 click(btn("play")); frames(120); assert g.world.day > d + 5
 click(btn("help")); click(btn("help")); frames(2)

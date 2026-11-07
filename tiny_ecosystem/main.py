@@ -147,6 +147,9 @@ class Game:
         elif bid == "help":
             self.show_why = not self.show_why
             self.refresh_why()
+        elif bid == "reset_rules":
+            for k, v in vars(Params()).items():
+                setattr(self.params, k, v)
         elif bid == "menu":
             self.open_modal("menu")
         elif bid == "guide":

@@ -17,7 +17,7 @@ class Params:
     rabbit_repro: float = 1.0   # multiplies rabbit birth probability
     fox_repro: float = 1.0      # multiplies fox birth probability
     grass_growth: float = 1.0   # multiplies grass regrowth
-    fox_hunger: float = 1.0     # multiplies fox energy loss
+    fox_hunger: float = 1.0     # multiplies fox vision radius (hunting ability)
 
 
 @dataclass

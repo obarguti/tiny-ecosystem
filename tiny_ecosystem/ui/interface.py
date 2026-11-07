@@ -5,6 +5,8 @@ queues *actions* (tuples) that ``main.Game`` carries out.
 """
 from __future__ import annotations
 
+import time
+
 import math
 from typing import Dict, List, Optional, Tuple
 
@@ -179,6 +181,10 @@ class Interface:
                                                ("menu", "Challenges", "Challenges: three little science experiments with a goal to reach (C)."),
                                                ("guide", "Guide", "Guide: show the welcome screen with the rules again (I)."))):
             self.buttons.append(Button(bid, pygame.Rect(x0 + i * (b3 + 8), 714, b3, 40), label, tip))
+        self.buttons.append(Button("reset_rules", pygame.Rect(x0 + w - 64, 441, 64, 24), "Reset",
+                                   "Reset: put all four rule sliders back to normal (x1.00). Rule changes apply right away. "
+                                   "Double-click a single slider to reset just that one."))
+        self.last_click = ("", 0.0)
         self.sliders: Dict[str, Slider] = {"speed": Slider("speed", pygame.Rect(x0 + 4, 252, w - 8, 12), 0.5, 8.0, SPEEDS)}
         for i, (pid, title, lo, hi, vmin, vmax) in enumerate(PARAMS):
             self.sliders[pid] = Slider(pid, pygame.Rect(x0 + 4, 474 + i * 58 + 18, w - 8, 12), vmin, vmax)
@@ -235,6 +241,12 @@ class Interface:
                 return False
             for sid, sl in self.sliders.items():
                 if sl.rect.inflate(16, 22).collidepoint(ev.pos):
+                    last_id, last_t = self.last_click
+                    self.last_click = (sid, time.monotonic())
+                    if last_id == sid and time.monotonic() - last_t < 0.45:
+                        self.last_click = ("", 0.0)
+                        self.actions.append(("speed", 1.0) if sid == "speed" else ("param", sid, 1.0))
+                        return True
                     self.dragging = sl
                     self._set_slider(sl, ev.pos[0])
                     return True
@@ -363,7 +375,6 @@ class Interface:
 
         # parameters
         self.text(surf, "Change the rules", 14, C.INK, (x0, 446), bold=True)
-        self.text(surf, "(changes apply right away)", 12, C.INK_SOFT, (x0 + w, 448), anchor="topright")
         for i, (pid, title, lo, hi, vmin, vmax) in enumerate(PARAMS):
             y = 474 + i * 58
             sl = self.sliders[pid]
@@ -375,8 +386,12 @@ class Interface:
             self.text(surf, lo, 12, C.INK_SOFT, (x0 + 2, y + 36))
             self.text(surf, hi, 12, C.INK_SOFT, (x0 + w - 2, y + 36), anchor="topright")
 
-        for b in self.buttons[10:]:
+        for b in self.buttons[10:13]:
             self._draw_button(surf, b, mouse=mouse)
+        rb = self.buttons[13]
+        pygame.draw.rect(surf, (255, 250, 238) if rb.rect.collidepoint(mouse) else C.PANEL_DARK, rb.rect, border_radius=7)
+        pygame.draw.rect(surf, C.PANEL_LINE, rb.rect, 1, border_radius=7)
+        self.text(surf, "Reset", 13, C.INK, rb.rect.center, bold=True, anchor="center")
         self.text(surf, "Space: play/pause   N: step   H: help", 12, C.INK_SOFT, (x0 + w // 2, 770), anchor="midtop")
 
     def _draw_slider(self, surf, sl: Slider, ticks=False) -> None:
