@@ -32,12 +32,52 @@ PARAMS = [
     ("fox_hunger", "Fox Hunger", "Low", "High", 0.5, 1.5),
 ]
 
+SLIDER_TIPS = {
+    "speed": "Speed: how fast days pass, from 0.1x (slow motion) up to 8x. Use Step to move one day at a time. "
+             "The + and - keys also change it.",
+    "rabbit_repro": "Rabbit Babies: how likely a rabbit pair is to have a baby. A pair must be grown-up, well fed, "
+                    "close together and rested. Right = more babies, left = fewer, centre = normal.",
+    "fox_repro": "Fox Babies: how likely a fox pair is to have a cub. Foxes must be grown-up, very well fed, "
+                 "close together and rested. Right = more cubs, left = fewer.",
+    "grass_growth": "Grass Growth: how quickly eaten grass grows back. Slow = rabbits graze the meadow bare and "
+                    "starve. Fast = lots of food for everyone.",
+    "fox_hunger": "Fox Hunger: how far foxes can see (their hunting skill). High = hungry foxes spot rabbits from "
+                  "far away, lock on and chase them. Low = they only notice rabbits close by.",
+    "s_rabbits": "How many rabbits live in the meadow on day 1. You need at least two grown-up rabbits to make babies.",
+    "s_foxes": "How many foxes live in the meadow on day 1. More foxes means more hunting and fleeing rabbits.",
+    "s_grass": "How much grass covers the meadow on day 1. Sparse meadows run out of food quickly.",
+}
+
+MODAL_TIPS = {
+    "start": "Close this window and begin. The Setup window starts the clock for you; use Step if you "
+             "would rather go one day at a time.",
+    "menu": "Open the three science challenges. Each one gives you a goal to reach by changing the rules.",
+    "close": "Go back to the meadow.",
+    "freeplay": "Leave the challenge and play in the free sandbox, with no goal and no time limit.",
+    "retry": "Try this challenge again from day 1 with the same animals. It starts paused so you can plan.",
+    "dice": "Make a different random meadow with the same animal numbers.",
+    "reset": "Put the starting rabbits, foxes and grass back to their normal amounts.",
+    "p_balanced": "A friendly start: 35 rabbits, 7 foxes, plenty of grass.",
+    "p_foxparty": "Lots of foxes (20) and fewer rabbits (25). Can the rabbits survive?",
+    "p_bunnyboom": "Lots of rabbits (80) and only 3 foxes. Watch the grass disappear!",
+    "p_sparse": "A dry meadow with little grass (30%), 40 rabbits and 5 foxes.",
+}
+for _i in range(1, 4):
+    MODAL_TIPS["c%d" % _i] = "Start challenge %d. It begins paused so you can adjust the sliders before time starts." % _i
+
+HELP_GUIDE = [
+    "Grazing: rabbits eat grass and leave bare patches. Hungry rabbits search for greener spots.",
+    "Hunting: a hungry fox that sees a rabbit locks on and chases it. Fox Hunger sets how far it sees.",
+    "Fleeing: a rabbit with a fox nearby runs away (!) and cannot eat. Tired foxes give up and rest.",
+    "Pairs: babies need two grown-up, well-fed animals close together, then a rest before the next one.",
+]
+
 TOOLS = [
-    ("inspect", "Inspect", "Click an animal to see how it is doing.", "1"),
-    ("rabbit", "Add Rabbits", "Click or drag on the meadow to add rabbits.", "2"),
-    ("fox", "Add Foxes", "Click or drag on the meadow to add foxes.", "3"),
-    ("grass", "Add Grass", "Click or drag to make grass grow.", "4"),
-    ("remove", "Remove", "Click an animal to remove it from the meadow.", "5"),
+    ("inspect", "Inspect", "Inspect: click an animal to see its age, energy and what it is doing.", "1"),
+    ("rabbit", "Add Rabbits", "Add Rabbits: click or drag on the meadow to add rabbits.", "2"),
+    ("fox", "Add Foxes", "Add Foxes: click or drag on the meadow to add foxes.", "3"),
+    ("grass", "Add Grass", "Add Grass: click or drag to plant fresh grass on bare patches.", "4"),
+    ("remove", "Remove", "Remove: click an animal to take it out of the meadow.", "5"),
 ]
 
 STATUS_COLORS = {
@@ -119,22 +159,23 @@ class Interface:
         self.x0, self.w = x0, w
         bw = (w - 3 * 8) // 4
         self.buttons: List[Button] = [
-            Button("play", pygame.Rect(x0, 176, bw, 40), "Play", "Start or pause time (Space)"),
-            Button("step", pygame.Rect(x0 + (bw + 8), 176, bw, 40), "Step", "Advance a single day (N)"),
+            Button("play", pygame.Rect(x0, 176, bw, 40), "Play", "Play / Pause: run time or freeze it (Space). New and restarted worlds start paused so you can look around first."),
+            Button("step", pygame.Rect(x0 + (bw + 8), 176, bw, 40), "Step", "Step: move forward exactly one day, then pause (N or right arrow). Great for watching a hunt unfold."),
             Button("restart", pygame.Rect(x0 + 2 * (bw + 8), 176, bw, 40), "Restart",
-                   "Start this same world again (R)"),
-            Button("new", pygame.Rect(x0 + 3 * (bw + 8), 176, bw, 40), "New", "Make a brand new world (G)"),
+                   "Restart: replay this same world from day 1 with the same animals and grass. It starts paused (R)."),
+            Button("new", pygame.Rect(x0 + 3 * (bw + 8), 176, bw, 40), "New", "New: make a different random meadow, paused on day 1 (G)."),
         ]
         tw = (w - 8) // 2
         for i, (tid, label, tip, key) in enumerate(TOOLS):
             r = pygame.Rect(x0 + (i % 2) * (tw + 8), 316 + (i // 2) * 40, tw, 34)
             self.buttons.append(Button("tool_" + tid, r, label, tip + "  (" + key + ")", icon=tid))
-        self.buttons.append(Button("why", pygame.Rect(x0 + (tw + 8), 396, tw, 34), "Why?",
-                                   "Explain what has been changing lately (H)"))
+        self.buttons.append(Button("help", pygame.Rect(x0 + (tw + 8), 396, tw, 34), "Help",
+                                   "Help: shows what has been happening lately and why, plus a short guide to hunting, "
+                                   "fleeing, babies and grazing (H)."))
         b3 = (w - 16) // 3
-        for i, (bid, label, tip) in enumerate((("setup", "Setup", "Choose how many animals to start with (S)"),
-                                               ("menu", "Challenges", "Try a science experiment (C)"),
-                                               ("help", "Help", "Show the instructions again (I)"))):
+        for i, (bid, label, tip) in enumerate((("setup", "Setup", "Setup: choose how many rabbits, foxes and how much grass to start with (S)."),
+                                               ("menu", "Challenges", "Challenges: three little science experiments with a goal to reach (C)."),
+                                               ("guide", "Guide", "Guide: show the welcome screen with the rules again (I)."))):
             self.buttons.append(Button(bid, pygame.Rect(x0 + i * (b3 + 8), 714, b3, 40), label, tip))
         self.sliders: Dict[str, Slider] = {"speed": Slider("speed", pygame.Rect(x0 + 4, 252, w - 8, 12), 0.5, 8.0, SPEEDS)}
         for i, (pid, title, lo, hi, vmin, vmax) in enumerate(PARAMS):
@@ -315,7 +356,7 @@ class Interface:
         self.text(surf, "Tools", 14, C.INK, (x0, 292), bold=True)
         for b in self.buttons[4:9]:
             self._draw_button(surf, b, active=(game.tool == b.id[5:]), mouse=mouse)
-        why = self.buttons[9]
+        why = self.buttons[9]  # the Help button
         self._draw_button(surf, why, active=game.show_why, mouse=mouse)
 
         # parameters
@@ -334,7 +375,7 @@ class Interface:
 
         for b in self.buttons[10:]:
             self._draw_button(surf, b, mouse=mouse)
-        self.text(surf, "Space: play/pause   N: step   H: why", 12, C.INK_SOFT, (x0 + w // 2, 770), anchor="midtop")
+        self.text(surf, "Space: play/pause   N: step   H: help", 12, C.INK_SOFT, (x0 + w // 2, 770), anchor="midtop")
 
     def _draw_slider(self, surf, sl: Slider, ticks=False) -> None:
         r = sl.rect
@@ -382,15 +423,16 @@ class Interface:
             pygame.draw.rect(surf, (62, 54, 46), rect, border_radius=16)
             surf.blit(img, img.get_rect(center=rect.center))
 
-        # "Why?" card
+        # Help card: what is happening now + how the rules work
         if game.show_why:
             f = self.fonts.get(13)
             blocks = [wrap(m, f, 252) for m in game.why]
-            height = 44 + sum(len(b) * 17 + 8 for b in blocks)
+            guide = [wrap(t, f, 252) for t in HELP_GUIDE]
+            height = 44 + sum(len(b) * 17 + 8 for b in blocks) + 30 + sum(len(b) * 17 + 6 for b in guide) + 8
             rect = pygame.Rect(0, 0, 300, height)
             rect.topright = (C.WORLD_AREA_W - 24, 18 if run is None else 100)
             self.panel(surf, rect, radius=12)
-            self.text(surf, "Why is this happening?", 15, C.INK, (rect.x + 14, rect.y + 10), bold=True)
+            self.text(surf, "Help: what is happening?", 15, C.INK, (rect.x + 14, rect.y + 10), bold=True)
             y = rect.y + 38
             for lines in blocks:
                 pygame.draw.circle(surf, C.ACCENT, (rect.x + 20, y + 8), 4)
@@ -398,6 +440,15 @@ class Interface:
                     surf.blit(f.render(ln, True, C.INK), (rect.x + 32, y))
                     y += 17
                 y += 8
+            pygame.draw.line(surf, C.PANEL_LINE, (rect.x + 14, y + 2), (rect.right - 14, y + 2), 1)
+            self.text(surf, "How it works", 13, C.INK_SOFT, (rect.x + 14, y + 8), bold=True)
+            y += 28
+            for lines in guide:
+                for ln in lines:
+                    surf.blit(f.render(ln, True, C.INK_SOFT), (rect.x + 32, y))
+                    y += 17
+                pygame.draw.circle(surf, C.PANEL_LINE, (rect.x + 20, y - len(lines) * 17 + 8), 3)
+                y += 6
 
         # inspector card
         a = game.selected_animal()
@@ -442,27 +493,39 @@ class Interface:
     # ------------------------------------------------------------ tooltip
     def draw_tooltip(self, surf, game, mouse) -> None:
         hit = None
-        if not game.modal:
+        if game.modal:
+            for bid, rect in self.modal_buttons:
+                if rect.collidepoint(mouse) and bid in MODAL_TIPS:
+                    hit = ("m_" + bid, MODAL_TIPS[bid])
+            for sid, sl in self.modal_sliders.items():
+                if sl.rect.inflate(16, 24).collidepoint(mouse) and sid in SLIDER_TIPS:
+                    hit = (sid, SLIDER_TIPS[sid])
+        else:
             for b in self.buttons:
                 if b.rect.collidepoint(mouse):
                     hit = (b.id, b.tip)
             for pid, title, lo, hi, vmin, vmax in PARAMS:
                 sl = self.sliders[pid]
-                if sl.rect.inflate(16, 24).collidepoint(mouse):
-                    hit = (pid, "%s: %s to %s. Now ×%.2f (1.00 = normal)" % (title, lo.lower(), hi.lower(), sl.value))
-            if self.sliders["speed"].rect.inflate(16, 24).collidepoint(mouse):
-                hit = ("speed", "How fast days pass (+ / - keys)")
+                if sl.rect.inflate(16, 24).collidepoint(mouse) or (
+                        pygame.Rect(self.x0, sl.rect.y - 22, self.w, 20).collidepoint(mouse)):
+                    hit = (pid, SLIDER_TIPS[pid])
+            sp = self.sliders["speed"]
+            if sp.rect.inflate(16, 24).collidepoint(mouse) or pygame.Rect(self.x0, sp.rect.y - 22, self.w, 20).collidepoint(mouse):
+                hit = ("speed", SLIDER_TIPS["speed"])
         if hit is None or hit[0] != self.hover_id:
             self.hover_id = hit[0] if hit else None
             self.hover_since = self.now
-        if hit and hit[1] and self.now - self.hover_since > 0.45:
+        if hit and hit[1] and self.now - self.hover_since > 0.35:
             f = self.fonts.get(13)
-            lines = wrap(hit[1], f, 240)
+            lines = wrap(hit[1], f, 270)
             w = max(f.size(l)[0] for l in lines) + 20
             h = len(lines) * 17 + 12
-            r = pygame.Rect(mouse[0] - w - 8, mouse[1] + 14, w, h)
-            if r.left < 6:
-                r.left = 6
+            if mouse[0] > C.WORLD_AREA_W:
+                r = pygame.Rect(mouse[0] - w - 8, mouse[1] + 14, w, h)
+            else:
+                r = pygame.Rect(mouse[0] + 14, mouse[1] + 16, w, h)
+            r.left = max(6, r.left)
+            r.right = min(C.WINDOW_W - 6, r.right)
             if r.bottom > C.WINDOW_H - 4:
                 r.bottom = mouse[1] - 8
             pygame.draw.rect(surf, (62, 54, 46), r, border_radius=8)
@@ -505,23 +568,30 @@ class Interface:
         return rect
 
     def _modal_intro(self, surf, game, mouse) -> None:
-        rect = self._modal_frame(surf, 640, 470, "Welcome to Tiny Ecosystem!")
+        rect = self._modal_frame(surf, 760, 600, "Welcome to Tiny Ecosystem!")
         lines = [
-            ("Rabbits eat grass.  Foxes eat rabbits.", True),
-            ("Everybody needs energy to stay alive and have babies.", False),
-            ("", False),
-            ("Press Play and watch the meadow come alive.", False),
-            ("Click an animal to see how it is doing.", False),
-            ("Use the tools to add animals or grass to the meadow.", False),
-            ("Use the sliders to change the rules of nature.", False),
-            ("", False),
-            ("Then ask: what would happen if I added five more foxes?", True),
+            ("Rabbits eat grass.  Foxes hunt rabbits.", True),
+            ("Grazing: rabbits nibble the grass down and leave bare patches. Hungry rabbits go searching "
+             "for greener spots, and rabbits that find no food starve.", False),
+            ("Hunting: a hungry fox looks for rabbits inside its sight radius. When it spots one it locks on "
+             "and chases it. Tired foxes give up and rest.", False),
+            ("Fleeing: a rabbit with a fox close by runs away (you will see a red !). "
+             "A running rabbit can't stop to eat.", False),
+            ("Babies need a pair: two grown-up, well-fed animals close together, "
+             "then a rest period before they can have another.", False),
+            ("The meadow starts paused. Press Step to go one day at a time, or Play to let time run. "
+             "Click an animal to see how it is doing.", False),
+            ("Open Help (H) for an explanation of what is happening, and hover over anything for a tip.", False),
+            ("Then ask: what if I gave the foxes sharper eyes, or added five more of them?", True),
         ]
-        y = rect.y + 80
-        for s, bold in lines:
-            if s:
-                self.text(surf, s, 18, C.INK if bold else C.INK_SOFT, (rect.centerx, y), bold=bold, anchor="midtop")
-            y += 30
+        y = rect.y + 84
+        for s_, bold in lines:
+            f = self.fonts.get(18 if bold else 16, bold)
+            for ln in wrap(s_, f, rect.w - 110):
+                img = f.render(ln, True, C.INK if bold else C.INK_SOFT)
+                surf.blit(img, img.get_rect(midtop=(rect.centerx, y)))
+                y += 23
+            y += 11
         # little mascots
         spr = pygame.Surface((90, 70), pygame.SRCALPHA)
         art.draw_rabbit(spr, 40, 60, 1.7, 1, 0.0)

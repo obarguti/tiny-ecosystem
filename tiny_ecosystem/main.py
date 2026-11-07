@@ -67,7 +67,7 @@ class Game:
     def restart(self) -> None:
         w = self.world
         self.new_world(seed=w.seed, challenge=self.challenge)
-        self.playing = self.challenge is None
+        self.playing = False                    # start paused so you can step from day 1
 
     def refresh_why(self) -> None:
         self.why = explain(self.world)
@@ -130,15 +130,15 @@ class Game:
             self.restart()
         elif bid == "new":
             self.new_world(challenge=None)
-            self.playing = True
+            self.playing = False
         elif bid.startswith("tool_"):
             self.set_tool(bid[5:])
-        elif bid == "why":
+        elif bid == "help":
             self.show_why = not self.show_why
             self.refresh_why()
         elif bid == "menu":
             self.open_modal("menu")
-        elif bid == "help":
+        elif bid == "guide":
             self.open_modal("intro")
         elif bid == "setup":
             self.playing = False
@@ -272,11 +272,11 @@ class Game:
         elif k == pygame.K_g:
             self.do_button("new")
         elif k == pygame.K_h:
-            self.do_button("why")
+            self.do_button("help")
         elif k == pygame.K_c:
             self.do_button("menu")
         elif k == pygame.K_i:
-            self.do_button("help")
+            self.do_button("guide")
         elif k == pygame.K_s:
             self.do_button("setup")
         elif k == pygame.K_ESCAPE:
@@ -301,8 +301,8 @@ class Game:
         self.ui.draw_world_overlays(self.screen, self)
         self.ui.draw_graph(self.screen, self)
         self.ui.draw_sidebar(self.screen, self, mouse)
-        self.ui.draw_tooltip(self.screen, self, mouse)
         self.ui.draw_modal(self.screen, self, mouse)
+        self.ui.draw_tooltip(self.screen, self, mouse)
 
 
 def main(argv=None) -> int:

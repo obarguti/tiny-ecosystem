@@ -48,9 +48,9 @@ click((sl.rect.right - 2, sl.rect.centery)); assert g.params.fox_hunger > 1.4, g
 click((sl.rect.x + sl.rect.w // 2, sl.rect.centery))
 sp = g.ui.sliders["speed"]; click((sp.rect.right - 1, sp.rect.centery)); assert g.speed == 8.0
 click(btn("play")); frames(120); assert g.world.day > d + 5
-click(btn("why")); click(btn("why")); frames(2)
-click(btn("restart")); assert g.world.day == 0
-click(btn("new")); frames(2)
+click(btn("help")); click(btn("help")); frames(2)
+click(btn("restart")); assert g.world.day == 0 and not g.playing
+click(btn("new")); frames(2); assert not g.playing and g.world.day == 0
 # challenges
 click(btn("menu")); frames(5)
 c1 = [r for b, r in g.ui.modal_buttons if b == "c1"][0]; click(c1.center)
