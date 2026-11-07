@@ -18,6 +18,7 @@ from gameplay.challenges import CHALLENGES, Challenge, ChallengeRun
 from gameplay.explain import explain
 from graphics.renderer import Renderer
 from simulation import rules
+from simulation.export import write_export
 from simulation.world import Params, World
 from ui.interface import PRESETS, SPEEDS, TOOLS, Interface
 
@@ -34,6 +35,7 @@ class Game:
         self.tool = "inspect"
         self.selected: Optional[int] = None
         self.show_why = False
+        self.toast = None                   # (message, show-until time)
         self.ended = False                  # sandbox run finished (nothing left to simulate)
         self.why: List[str] = []
         self.modal: Optional[str] = None
@@ -119,6 +121,12 @@ class Game:
             self.acc = min(self.acc, interval)
         self.renderer.update(dt)
 
+    def export(self) -> None:
+        path = write_export(self.world, os.path.join(C.HERE, "exports"), self.challenge)
+        print("exported", path)
+        self.toast = ("Saved exports/" + os.path.basename(path), self.ui.now + 6.0)
+        self.last_export = path
+
     def open_modal(self, name: str) -> None:
         self.modal, self.modal_t = name, 0.0
 
@@ -147,6 +155,8 @@ class Game:
         elif bid == "help":
             self.show_why = not self.show_why
             self.refresh_why()
+        elif bid == "export":
+            self.export()
         elif bid == "reset_rules":
             for k, v in vars(Params()).items():
                 setattr(self.params, k, v)
@@ -238,20 +248,16 @@ class Game:
         self.last_paint_cell = cell
         x, y = cell
         if self.tool in ("rabbit", "fox"):
-            spot = (x, y) if w.is_free(x, y) else (None if dragging else w.free_neighbour(x, y, 1))
-            if spot is not None:
-                a = w.spawn(self.tool, *spot)
-                if a is not None:
-                    self.renderer.vis_pop_in(a)
+            a = w.apply_tool(self.tool, x, y, dragging)
+            if a is not None:
+                self.renderer.vis_pop_in(a)
         elif self.tool == "grass":
-            for dx in (-1, 0, 1):
-                for dy in (-1, 0, 1):
-                    w.add_grass(x + dx, y + dy, 70 if (dx, dy) == (0, 0) else 45)
+            w.apply_tool("grass", x, y)
             self.renderer.particles_grass(x, y)
         elif self.tool == "remove":
             a = self.renderer.pick_animal(w, pos) or w.animal_at(x, y)
+            w.apply_tool("remove", x, y, False, a.id if a is not None else None)
             if a is not None:
-                w.remove(a, "removed")
                 self.renderer.flush_events(w)
 
     def handle_event(self, ev: pygame.event.Event) -> None:
@@ -300,6 +306,8 @@ class Game:
             self.do_button("guide")
         elif k == pygame.K_s:
             self.do_button("setup")
+        elif k == pygame.K_e:
+            self.do_button("export")
         elif k == pygame.K_ESCAPE:
             self.set_tool("inspect")
             self.selected = None
@@ -320,7 +328,7 @@ class Game:
                                                   and mouse[1] < C.WORLD_AREA_H) else None
         self.renderer.draw(self.screen, self.world, self.selected, hover, self.tool)
         self.ui.draw_world_overlays(self.screen, self)
-        self.ui.draw_graph(self.screen, self)
+        self.ui.draw_graph(self.screen, self, mouse)
         self.ui.draw_sidebar(self.screen, self, mouse)
         self.ui.draw_modal(self.screen, self, mouse)
         self.ui.draw_tooltip(self.screen, self, mouse)

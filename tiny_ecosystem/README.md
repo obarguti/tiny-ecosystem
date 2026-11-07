@@ -25,6 +25,7 @@ python main.py --screenshot shot.png --days 60 --seed 3 --select 5   # headless 
 | **Tools** (1-5) | Inspect, Add Rabbits, Add Foxes, Add Grass, Remove. Click or drag on the meadow |
 | **Inspect** | click an animal for age, energy and what it is doing |
 | **Reset** (rules header) | puts the four rule sliders back to normal; double-click one slider to reset just it |
+| **Export CSV** (E) | saves the day-by-day numbers and every setting needed to reproduce the run to `exports/` |
 | **Help** (H) | explains what has been happening (hunting, fleeing, grazing, pairs) and how the rules work |
 | **Sliders** | Rabbit Babies, Fox Babies, Grass Growth, Fox Hunger (= how far foxes can see). They apply instantly |
 | **Setup** (S) | choose starting rabbits, foxes and grass; presets; live preview |
@@ -35,6 +36,21 @@ The graph shows the last 300 days: rabbits (blue, left scale), foxes (orange, ri
 
 **The sandbox ends** when there are no rabbits, no foxes and the grass has grown back to 100%.
 Challenges have their own win/lose rules.
+
+## Exporting results
+
+**Export CSV** (button under the meadow, or key E) writes one file to `tiny_ecosystem/exports/`.
+`# key = value` comment lines at the top hold everything needed to reproduce the run: the world seed,
+starting rabbits/foxes/grass, every simulation setting, and every tool use (add/remove/grass) with the
+day it happened. The table below has one row per day: `day, rabbits, foxes, grass_pct, eaten_by_foxes,
+starved, old_age, born_rabbits, born_foxes` plus the four slider values in effect that day, so a run where
+you moved sliders is still reproducible.
+
+    import pandas as pd
+    df = pd.read_csv("exports/run.csv", comment="#")      # Excel/Sheets also open it directly
+
+To prove a file reproduces: `python tests/replay.py exports/run.csv` (prints REPRODUCED or the first
+day that differs).
 
 ## Layout
 

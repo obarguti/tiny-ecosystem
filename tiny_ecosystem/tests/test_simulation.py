@@ -231,3 +231,28 @@ def test_fox_ignores_rabbits_when_full():
     rules.step(w)
     assert f.status != "Hunting" and f.status != "Eating"
     assert w.history[-1].eaten == 0
+
+
+def test_export_contains_parameters_and_replays_exactly():
+    from simulation.export import build_csv, parse, verify
+    cfg = SimConfig()
+    w = World(cfg, seed=7, rabbits=30, foxes=6, record_events=False, grass_level=0.8)
+    for day in range(80):
+        if day == 20:
+            w.params.fox_hunger = 1.4                 # sliders moved mid-run
+            w.params.grass_growth = 0.5
+        if day == 35:
+            w.apply_tool("rabbit", 5, 5)              # player actions mid-run
+            w.apply_tool("grass", 10, 10)
+        if day == 50:
+            w.apply_tool("remove", 0, 0, False, w.foxes[0].id)
+        rules.step(w)
+    text = build_csv(w)
+    meta, actions, rows = parse(text)
+    assert meta["seed"] == "7" and meta["start_rabbits"] == "30" and meta["start_foxes"] == "6"
+    assert meta["start_grass_level"] == "0.8" and "cfg.grass_regrow" in meta and "cfg.fox_detect_radius" in meta
+    assert len(actions) == 3 and len(rows) == 81
+    assert rows[30]["fox_hunger"] == "1.4" and rows[5]["fox_hunger"] == "1"
+    assert verify(text) is None                       # replay reproduces every day exactly
+    # a tampered setting must be detected
+    assert verify(text.replace("# seed = 7", "# seed = 8")) is not None

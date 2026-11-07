@@ -31,6 +31,11 @@ class Stat:
     old: int = 0                # animals that died of old age this tick
     born_r: int = 0
     born_f: int = 0
+    # slider values in effect during this tick (so a run with changing sliders can be reproduced)
+    rabbit_repro: float = 1.0
+    fox_repro: float = 1.0
+    grass_growth: float = 1.0
+    fox_hunger: float = 1.0
 
 
 class World:
@@ -53,6 +58,7 @@ class World:
         self.occ: Dict[Tuple[int, int], Animal] = {}
         self.events: List[tuple] = []
         self.history: List[Stat] = []
+        self.interventions: List[tuple] = []     # tool uses by the player: (day, tool, x, y, dragging, target_id)
 
         # Most cells start at least partly grown.
         self.grass: List[List[float]] = [
@@ -63,6 +69,7 @@ class World:
         self.rng.shuffle(cells)
         n_r = cfg.start_rabbits if rabbits is None else rabbits
         n_f = cfg.start_foxes if foxes is None else foxes
+        self.start_rabbits, self.start_foxes, self.start_grass_level = n_r, n_f, grass_level
         for _ in range(n_r):
             if cells:
                 x, y = cells.pop()
@@ -151,10 +158,31 @@ class World:
         return 100.0 * total / (self.cols * self.rows * self.cfg.grass_max)
 
     def record_stats(self, **counters: int) -> None:
-        self.history.append(Stat(self.day, len(self.rabbits), len(self.foxes),
-                                 self.grass_pct(), **counters))
-        if len(self.history) > 4000:
-            del self.history[:1000]
+        p = self.params
+        self.history.append(Stat(self.day, len(self.rabbits), len(self.foxes), self.grass_pct(),
+                                 **counters, rabbit_repro=p.rabbit_repro, fox_repro=p.fox_repro,
+                                 grass_growth=p.grass_growth, fox_hunger=p.fox_hunger))
+
+    # ------------------------------------------------------------ player tools
+    def apply_tool(self, tool: str, x: int, y: int, dragging: bool = False,
+                   target_id: Optional[int] = None) -> Optional[Animal]:
+        """Use a player tool at a cell. Every use is logged so an exported run can be replayed exactly.
+        Returns the animal that was added or removed, if any."""
+        self.interventions.append((self.day, tool, x, y, int(dragging), -1 if target_id is None else target_id))
+        if tool in ("rabbit", "fox"):
+            spot = (x, y) if self.is_free(x, y) else (None if dragging else self.free_neighbour(x, y, 1))
+            return self.spawn(tool, *spot) if spot is not None else None
+        if tool == "grass":
+            for dx in (-1, 0, 1):
+                for dy in (-1, 0, 1):
+                    self.add_grass(x + dx, y + dy, 70 if (dx, dy) == (0, 0) else 45)
+            return None
+        if tool == "remove":
+            a = self.find_animal(target_id) if target_id is not None and target_id >= 0 else self.animal_at(x, y)
+            if a is not None:
+                self.remove(a, "removed")
+            return a
+        return None
 
     # ------------------------------------------------------------ decor
     def _make_decor(self, rng: random.Random) -> List[Decor]:

@@ -123,3 +123,6 @@ dmypy.json
 # OS
 .DS_Store
 Thumbs.db
+# Exported runs
+tiny_ecosystem/exports/
+exports/

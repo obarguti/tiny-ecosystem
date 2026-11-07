@@ -184,6 +184,9 @@ class Interface:
         self.buttons.append(Button("reset_rules", pygame.Rect(x0 + w - 64, 441, 64, 24), "Reset",
                                    "Reset: put all four rule sliders back to normal (x1.00). Rule changes apply right away. "
                                    "Double-click a single slider to reset just that one."))
+        self.buttons.append(Button("export", pygame.Rect(C.WORLD_AREA_W - 118, C.WORLD_AREA_H + 6, 106, 24), "Export CSV",
+                                   "Export CSV: save the day-by-day numbers plus every setting needed to reproduce this run "
+                                   "(seed, start counts, sliders, config) to the exports folder (E)."))
         self.last_click = ("", 0.0)
         self.sliders: Dict[str, Slider] = {"speed": Slider("speed", pygame.Rect(x0 + 4, 252, w - 8, 12), 0.5, 8.0, SPEEDS)}
         for i, (pid, title, lo, hi, vmin, vmax) in enumerate(PARAMS):
@@ -504,8 +507,20 @@ class Interface:
         self.text(surf, a.status, 13, C.INK, (rect.x + 34, rect.y + 71), bold=True)
 
     # ------------------------------------------------------------ graph
-    def draw_graph(self, surf, game) -> None:
+    def draw_graph(self, surf, game, mouse=(0, 0)) -> None:
         draw_graph(surf, pygame.Rect(0, C.WORLD_AREA_H, C.WORLD_AREA_W, C.GRAPH_H), game.world.history, self.fonts)
+        eb = [b for b in self.buttons if b.id == "export"][0]
+        pygame.draw.rect(surf, (255, 250, 238) if eb.rect.collidepoint(mouse) else C.PANEL_DARK, eb.rect, border_radius=7)
+        pygame.draw.rect(surf, C.PANEL_LINE, eb.rect, 1, border_radius=7)
+        self.text(surf, "Export CSV", 13, C.INK, eb.rect.center, bold=True, anchor="center")
+        toast = getattr(game, "toast", None)
+        if toast and self.now < toast[1]:
+            f = self.fonts.get(13, True)
+            img = f.render(toast[0], True, (255, 255, 255))
+            r = img.get_rect().inflate(28, 14)
+            r.midbottom = (C.WORLD_AREA_W // 2, C.WORLD_AREA_H - 54)
+            pygame.draw.rect(surf, (62, 54, 46), r, border_radius=16)
+            surf.blit(img, img.get_rect(center=r.center))
 
     # ------------------------------------------------------------ tooltip
     def draw_tooltip(self, surf, game, mouse) -> None:
